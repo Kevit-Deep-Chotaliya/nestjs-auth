@@ -33,7 +33,7 @@ export class EmailService {
             from: "onboarding@resend.dev",
             to: email,
             subject: 'Reset your password',
-            html : `<h2>Welcome.! Please verify your email..</h2>
+            html : `<h2>Password Reset Request</h2>
             <p>click the link below to reset your password.This link will be expires in 1 hour.</p>
             <a href="${resetUrl}">Reset Password</a>
             <p>If you didn't request a password reset. you can safely ignore this email.</p>`

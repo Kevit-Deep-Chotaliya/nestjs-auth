@@ -7,6 +7,9 @@ import { registerDto } from './dto/register.dto.js';
 import { loginDto } from './dto/login.dto.js';
 import type { User } from '../db/schema.js';
 import { CurrentUser } from '../common/decorators/current-user/current-user.decorator.js';
+import { forgotPasswordDto } from './dto/forgot-password.dto.js';
+import { resetPasswordDto } from './dto/reset-password.dto.js';
+import { PassThrough } from 'stream';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -26,9 +29,9 @@ export class AuthController {
     @Public()
     @Get("verify-email")
     @ApiOperation({ summary: "Verify email address and auto-login" })
-    async verifyEmail(@Query('token') token: string, 
-                      @Res({ passthrough: true }) res: Response
-    ){
+    async verifyEmail(@Query('token') token: string,
+        @Res({ passthrough: true }) res: Response
+    ) {
         return await this.authService.verifyEmail(token, res);
     }
 
@@ -37,9 +40,9 @@ export class AuthController {
     @Post("login")
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: "Login and recieve access + refresh tokens" })
-    async login(@Body() dto: loginDto, 
-                @Res({ passthrough: true }) res: Response
-    ){
+    async login(@Body() dto: loginDto,
+        @Res({ passthrough: true }) res: Response
+    ) {
         return await this.authService.login(dto, res);
     }
 
@@ -53,7 +56,7 @@ export class AuthController {
     async refresh(
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
-    ){
+    ) {
         const cookies = req.cookies as Record<string, string>;
         const refreshToken = cookies.refresh_token;
         return this.authService.refresh(refreshToken, res);
@@ -67,7 +70,7 @@ export class AuthController {
     async logout(
         @CurrentUser() user: User,
         @Res({ passthrough: true }) res: Response
-    ){
+    ) {
         return this.authService.logout(user.id, res);
     }
 
@@ -83,6 +86,24 @@ export class AuthController {
             role: user.role,
             isVerified: user.isVerified,
         }
+    }
+
+    //POST /api/auth/forgot-password
+    @Public()
+    @Post("forgot-password")
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: "Request a password reset email" })
+    async forgotPassword(@Body() dto: forgotPasswordDto) {
+        return await this.authService.forgotPassword(dto.email);
+    }
+
+    //POST /api/auth/reset-password
+    @Public()
+    @Post("reset-password")
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: "Reset password using token from email" })
+    async resetPassword(@Body() dto: resetPasswordDto) {
+        return await this.authService.resetPassword(dto.token, dto.password);
     }
 
 }
