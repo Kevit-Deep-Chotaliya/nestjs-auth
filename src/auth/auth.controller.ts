@@ -19,7 +19,7 @@ export class AuthController {
     @Post("register")
     @ApiOperation({ summary: "Register a new user" })
     async register(@Body() dto: registerDto) {
-        await this.authService.register(dto);
+        return await this.authService.register(dto);
     }
 
     //GET /api/auth/verify-email?token=...
@@ -29,7 +29,7 @@ export class AuthController {
     async verifyEmail(@Query('token') token: string, 
                       @Res({ passthrough: true }) res: Response
     ){
-        await this.authService.verifyEmail(token, res);
+        return await this.authService.verifyEmail(token, res);
     }
 
     //POST /api/auth/login
@@ -40,7 +40,7 @@ export class AuthController {
     async login(@Body() dto: loginDto, 
                 @Res({ passthrough: true }) res: Response
     ){
-        await this.authService.login(dto, res);
+        return await this.authService.login(dto, res);
     }
 
 

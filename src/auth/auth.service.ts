@@ -48,7 +48,7 @@ export class AuthService {
         void this.emailService.sendVerificationEmail(user.email, verificationToken)
 
         return {
-            Message: "Registration Successfull. Please check your email to verify your account.",
+            message: "Registration Successfull. Please check your email to verify your account.",
         };
     }
 
@@ -190,7 +190,6 @@ export class AuthService {
             refreshToken
         }
     }
-
 
 
     private async saveRefreshToken(userId: string, refreshToken: string) {
