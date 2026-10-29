@@ -53,46 +53,6 @@ export class AuthService {
     }
 
 
-    async verifyEmail(token: string, res: Response) {
-        const user = await this.userService.findByVerificationToken(token);
-
-        if (!user || !user.verificationToken) {
-            throw new BadRequestException("Invalid verification token")
-        }
-
-        if(
-            user.verificationTokenExpiresAt &&
-            user.verificationTokenExpiresAt < new Date()
-        ) {
-            throw new BadRequestException(
-                "Verification token has expired. Please request a new one."
-            )
-        }
-
-        await this.userService.update(user.id, {
-            isVerified: true,
-            verificationToken: null,
-            verificationTokenExpiresAt: null
-        })
-
-        const tokens = await this.generateToken(user);
-        await this.saveRefreshToken(user.id, tokens.refreshToken);
-        this.setRefreshTokenCookie(res, tokens.refreshToken);
-
-        return {
-            message : "Email verified successfully. you are now logged in.",
-            accessToken : tokens.accessToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-            },
-        };
-    }
-
-
-
     async login(dto: loginDto, res: Response) {
         const user = await this.userService.findUserByEmail(dto.email);
 
@@ -121,6 +81,45 @@ export class AuthService {
                 email: user.email,
                 role: user.role,
                 name: user.name
+            },
+        };
+    }
+
+    
+    async verifyEmail(token: string, res: Response) {
+        const user = await this.userService.findByVerificationToken(token);
+
+        if (!user || !user.verificationToken) {
+            throw new BadRequestException("Invalid verification token")
+        }
+
+        if (
+            user.verificationTokenExpiresAt &&
+            user.verificationTokenExpiresAt < new Date()
+        ) {
+            throw new BadRequestException(
+                "Verification token has expired. Please request a new one."
+            )
+        }
+
+        await this.userService.update(user.id, {
+            isVerified: true,
+            verificationToken: null,
+            verificationTokenExpiresAt: null
+        })
+
+        const tokens = await this.generateToken(user);
+        await this.saveRefreshToken(user.id, tokens.refreshToken);
+        this.setRefreshTokenCookie(res, tokens.refreshToken);
+
+        return {
+            message: "Email verified successfully. you are now logged in.",
+            accessToken: tokens.accessToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
             },
         };
     }
@@ -162,6 +161,7 @@ export class AuthService {
         };
     }
 
+
     async logout(userId: string, res: Response) {
         await this.userService.update(userId, { refreshTokenHash: null });
 
@@ -171,12 +171,13 @@ export class AuthService {
         }
     }
 
+
     async forgotPassword(email: string) {
         const user = await this.userService.findUserByEmail(email);
 
         if (!user) {
             return {
-                message : "If an account with that email exists, a reset link has been sent."
+                message: "If an account with that email exists, a reset link has been sent."
             }
         }
 
@@ -191,9 +192,10 @@ export class AuthService {
         void this.emailService.sendPasswordResetEmail(user.email, resetToken);
 
         return {
-            message : "If an account with that email exists, a reset link has been sent."
+            message: "If an account with that email exists, a reset link has been sent."
         };
     }
+
 
     async resetPassword(token: string, newPassword: string) {
         const user = await this.userService.findByResetToken(token);
@@ -202,14 +204,14 @@ export class AuthService {
             throw new BadRequestException("Invalid reset token")
         }
 
-        if (user.resetTokenExpiresAt &&  user.resetTokenExpiresAt < new Date()) {
-            throw new BadRequestException (
+        if (user.resetTokenExpiresAt && user.resetTokenExpiresAt < new Date()) {
+            throw new BadRequestException(
                 "Reset token has expired, please request a new one."
             )
         }
 
         const passwordHash = await bcrypt.hash(newPassword, 12);
-        
+
         await this.userService.update(user.id, {
             passwordHash,
             resetToken: null,
@@ -217,7 +219,7 @@ export class AuthService {
         });
 
         return {
-            message : "Password reset successfull. You can now log in."
+            message: "Password reset successfull. You can now log in."
         }
     }
 
@@ -246,6 +248,7 @@ export class AuthService {
         const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
         await this.userService.update(userId, { refreshTokenHash });
     }
+
 
     private setRefreshTokenCookie(res: Response, refreshToken: string) {
         res.cookie("refresh_token", refreshToken, {
