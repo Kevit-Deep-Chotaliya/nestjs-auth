@@ -16,7 +16,7 @@ export class TasksController {
 
     @Get()
     @CacheKey("ALL-TASKS")
-    @CacheTTL(60000)
+    @CacheTTL(0)
     @ApiOperation({ summary: "Get all tasks for current User" })
     findAll(@CurrentUser() user: User) {
         console.log("INSIDE_CONTROLLER");

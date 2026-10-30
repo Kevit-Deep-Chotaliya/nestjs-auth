@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersService } from './users/users.service.js';
 import { UsersModule } from './users/users.module.js';
 import { EmailService } from './auth/email/email.service.js';
@@ -29,16 +29,17 @@ import KeyvRedis from "@keyv/redis";
       expandVariables: true,
     }),
     JwtModule.register({}),
-    // CacheModule.register({ 
-    //   isGlobal: true,
-    //   ttl: 30000
-    // }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: () => ({
-        stores: [new KeyvRedis('redis://localhost:6379')],
-        ttl: 60000,
-      }),
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        return {
+          stores: [new KeyvRedis(redisUrl)],
+          ttl: 0
+        }
+      }
     }),
     UsersModule,
     AuthModule,
