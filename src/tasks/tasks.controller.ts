@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseInterceptors } from '@nestjs/common';
 import { TasksService } from './tasks.service.js';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Createtaskdto } from './dto/create-task.dto.js';
 import { CurrentUser } from '../common/decorators/current-user/current-user.decorator.js';
 import { type User } from '../db/schema.js';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @ApiTags("Tasks")
+@UseInterceptors(CacheInterceptor)
 @ApiBearerAuth()
 @Controller('tasks')
 export class TasksController {
@@ -13,8 +15,11 @@ export class TasksController {
     constructor(private tasksService: TasksService) {}
 
     @Get()
+    @CacheKey("ALL-TASKS")
+    @CacheTTL(60000)
     @ApiOperation({ summary: "Get all tasks for current User" })
     findAll(@CurrentUser() user: User) {
+        console.log("INSIDE_CONTROLLER");
         return this.tasksService.findAllForUser(user.id)
     }
 

@@ -1,4 +1,4 @@
-import { Req, Res, HttpCode, HttpStatus, Controller, Post, Body, Query, Get } from '@nestjs/common';
+import { Req, Res, HttpCode, HttpStatus, Controller, Post, Body, Query, Get, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public/public.decorator.js';
 import type { Request, Response } from 'express';
@@ -11,8 +11,10 @@ import { forgotPasswordDto } from './dto/forgot-password.dto.js';
 import { resetPasswordDto } from './dto/reset-password.dto.js';
 import { PassThrough } from 'stream';
 import { Throttle } from '@nestjs/throttler';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @ApiTags('auth')
+@UseInterceptors(CacheInterceptor)
 @Controller('auth')
 export class AuthController {
 

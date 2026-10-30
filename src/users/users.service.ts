@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { users, type NewUser } from '../db/schema.js';
+import { type Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class UsersService {
+
+    constructor(@Inject(CACHE_MANAGER) private cache: Cache) { }
 
     async findByVerificationToken(token: string) {
         return db.query.users.findFirst({
@@ -46,7 +50,17 @@ export class UsersService {
     }
 
     async findAll() {
-        return db.query.users.findMany();
+        const cached = await this.cache.get('users:all')
+
+        if (cached) {
+            console.log("Cache Hit: returning data from cache");
+            return cached;
+        }
+
+        console.log("Cache Miss: returning data from database");
+        const data = await db.query.users.findMany();
+        console.log("setting data in cache for 60 seconds");
+        return await this.cache.set('users:all', data, 60000);
     }
 
     async delete(id: string) {

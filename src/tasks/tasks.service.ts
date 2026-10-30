@@ -1,16 +1,36 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { db } from '../db/index.js';
 import { tasks } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { Createtaskdto } from './dto/create-task.dto.js';
 import { CreateApiKeyOptions } from 'resend';
 import { not } from 'supertest/lib/cookies.js';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { type Cache } from 'cache-manager';
 
 
 @Injectable()
 export class TasksService {
 
+    constructor(@Inject("CACHE_MANAGER") private cache: Cache) {}
+
     async findAllForUser(userId: string) {
+
+        // const cached = await this.cache.get("tasks:all");
+        // if (cached) {
+        //     console.log("Cache Hit: get data from cache");
+        //     return cached;
+        // }
+
+        // console.log("Cache Miss: get data from database");
+        // const data = await db.query.tasks.findMany({
+        //     where: eq(tasks.userId, userId)
+        // })
+        // console.log("setting data into cache for 60 seconds")
+        // await this.cache.set('tasks:all', data, 60000);
+        // await this.cache.del('tasks:all');
+        // return data;
+        console.log("INSIDE_SERVICE");
         return db.query.tasks.findMany({
             where: eq(tasks.userId, userId)
         })

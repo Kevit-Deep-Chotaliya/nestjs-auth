@@ -7,12 +7,14 @@ import { AuthService } from './auth/auth.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth/jwt-auth.guard.js';
 import { JwtModule } from '@nestjs/jwt';
 import { RolesGuard } from './common/guards/roles/roles.guard.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis from "@keyv/redis";
 
 @Module({
   imports: [
@@ -23,19 +25,31 @@ import { AdminModule } from './admin/admin.module.js';
       }
     ]),
     ConfigModule.forRoot({
-      isGlobal : true,
-      expandVariables : true,
+      isGlobal: true,
+      expandVariables: true,
     }),
     JwtModule.register({}),
+    // CacheModule.register({ 
+    //   isGlobal: true,
+    //   ttl: 30000
+    // }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: () => ({
+        stores: [new KeyvRedis('redis://localhost:6379')],
+        ttl: 60000,
+      }),
+    }),
     UsersModule,
     AuthModule,
     TasksModule,
     AdminModule
   ],
-  providers: [UsersService, EmailService, AuthService, 
-              { provide: APP_GUARD, useClass: ThrottlerGuard},
-              { provide: APP_GUARD, useClass: JwtAuthGuard },
-              { provide: APP_GUARD, useClass: RolesGuard }],
+  providers: [UsersService, EmailService, AuthService,
+    { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard }],
   controllers: [AuthController],
 })
-export class AppModule {}
+export class AppModule { }
