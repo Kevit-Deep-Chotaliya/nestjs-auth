@@ -6,6 +6,7 @@ import { EmailService } from './auth/email/email.service.js';
 import { AuthService } from './auth/auth.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthModule } from './auth/auth.module.js';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth/jwt-auth.guard.js';
 import { JwtModule } from '@nestjs/jwt';
@@ -15,6 +16,12 @@ import { AdminModule } from './admin/admin.module.js';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 20
+      }
+    ]),
     ConfigModule.forRoot({
       isGlobal : true,
       expandVariables : true,
@@ -26,6 +33,7 @@ import { AdminModule } from './admin/admin.module.js';
     AdminModule
   ],
   providers: [UsersService, EmailService, AuthService, 
+              { provide: APP_GUARD, useClass: ThrottlerGuard},
               { provide: APP_GUARD, useClass: JwtAuthGuard },
               { provide: APP_GUARD, useClass: RolesGuard }],
   controllers: [AuthController],
